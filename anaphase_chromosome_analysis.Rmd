@@ -1,0 +1,70 @@
+---
+title: "R Notebook"
+author: "inoko"
+date: "2022-07-19"
+output: html_document
+---
+
+```{r}
+#install.packages("tidyverse") 
+#import library
+library(ggbeeswarm)
+library(data.table)
+library(Rmisc)
+library(Hmisc)
+library(ggplot2)
+library(tidyverse)
+library(dplyr)
+library(readr)
+library(car)
+library(multcomp)
+library(ggsci)
+library(scales)
+library(vcd)
+library(tidytext)
+library(tidyr)
+library(ggpubr)
+library(ggpattern)
+library(ggthemes)
+library(khroma)
+library(conflicted)
+```
+
+```{r}
+#Load csv file as datasheet
+data2 <- read_csv("C:/Users/in0k0/OneDrive/Data/220712_MI10_4N_prometa-anaphase.csv")
+head(data2)
+
+#centrosome2のploidy level順にソーティング
+sort1 = data2 %>%
+  dplyr::filter(daughter.label == "daughter1.centrosome2.Area") %>%
+  group_by(label2) %>%
+  dplyr::summarise(ploidyArea_min = min(Ploidy.from.Area, na.rm = TRUE),
+            .groups = "drop")
+
+#棒グラフの表示順を指定
+#data2$daughter.label.2 <- factor(data2$daughter.label, levels = c("daughter3.centrosome1.Area", "daughter2.centrosome1.Area",  "daughter1.centrosome2.Area"))
+
+#plot_2nuc
+inner_join(data2, sort1, by = "label2") %>% 
+  dplyr::filter(Sample == "2nuc") %>%
+  dplyr::filter(Daughter.Nuc == 3) %>%
+  ggplot(mapping = aes(x = reorder(order, -ploidyArea_min), y = Ploidy.from.Area)) +
+  #geom_bar(stat = "identity", aes(fill=daughter.label.2))+
+  geom_bar(stat = "identity", aes(fill=CentrosomeNumber),colour = "black",size = 1)+
+  coord_flip()+
+  scale_fill_brewer(palette = "Set2")+
+  geom_hline(yintercept = 1, alpha = 3)+     # x axis に線を引く
+  geom_hline(yintercept = 2, alpha = 3) +
+  geom_hline(yintercept = 3, alpha = 3) +
+  geom_hline(yintercept = 4, alpha = 3) +
+  geom_hline(yintercept = 5, alpha = 3) +
+  geom_hline(yintercept = 6, alpha = 3) +
+  geom_hline(yintercept = 7, alpha = 3)+
+  labs(title = "CF, 3 polar",
+       x = "Cell#",
+       y = "Ploidy level (Volume)")+
+  geom_text(aes(label = Ploidy.from.Area), hjust = 3, position="stack", vjust = .5, check_overlap = FALSE, size = 2.5)+     #show ploidy value on each bar
+  theme_bw(base_size = 14, base_family = "calibri")
+  
+```
